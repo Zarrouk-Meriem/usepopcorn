@@ -54,7 +54,7 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const movieName = "flmfgfg";
+  const movieName = "dd";
 
   useEffect(function () {
     async function fetchMovies() {
@@ -69,7 +69,7 @@ export default function App() {
         if (data.Response === "False") throw new Error("Movie not found");
         setMovies(data.Search);
       } catch (err) {
-        console.error(err);
+        console.error("caught an error:", err);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -86,7 +86,7 @@ export default function App() {
         <Box>
           {isLoading && <Loader />}
           {!isLoading && !error && <MovieList movies={movies} />}
-          {error && <Error errorMessage={error} />}
+          {error && <ErrorMessage errorMessage={error} />}
         </Box>
         <Box>
           <WatchedSummary watched={watched} />
@@ -96,7 +96,7 @@ export default function App() {
     </>
   );
 }
-function Error({ errorMessage }) {
+function ErrorMessage({ errorMessage }) {
   return (
     <p className="error">
       <span>⛔️ </span>
