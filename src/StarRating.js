@@ -18,6 +18,7 @@ export default function StarRating({
   size = 48,
   className = "",
   onSetRating,
+  defaultRate = 0,
 }) {
   const textStyle = {
     lineHeight: "1",
@@ -25,7 +26,7 @@ export default function StarRating({
     fontSize: `${size}px`,
     color,
   };
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(defaultRate);
   const [tempRating, setTempRating] = useState(0);
   function handleRating(rating) {
     setRating(rating);
