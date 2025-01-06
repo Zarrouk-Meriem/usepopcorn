@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 
 const KEY = "f84fc31d";
@@ -293,6 +293,22 @@ function Logo() {
   );
 }
 function Search({ query, setQuery }) {
+  const inputEl = useRef(null);
+  useEffect(
+    function () {
+      function callback(e) {
+        if (inputEl.current === document.activeElement) return;
+        if (e.code === "Enter") {
+          inputEl.current.focus();
+          setQuery("");
+        }
+      }
+      document.addEventListener("keydown", callback);
+
+      inputEl.current.focus();
+    },
+    [setQuery]
+  );
   return (
     <input
       className="search"
@@ -300,6 +316,7 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={inputEl}
     />
   );
 }
@@ -408,11 +425,17 @@ function MovieDetails({
   onCloseMovie,
   onSetWatched,
   watched,
-  movies,
 }) {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const isWatched = watched.map((movie) => movie.imdbID).includes(selectedId);
+  const countRef = useRef(0);
+  useEffect(
+    function () {
+      if (rating) countRef.current = countRef.current + 1;
+    },
+    [rating]
+  );
   const watchedMovieUserRating = watched.find(
     (movie) => movie.imdbID === selectedId
   )?.userRating;
@@ -451,6 +474,7 @@ function MovieDetails({
       Poster: selectedMovie.Poster,
       runtime: Number(selectedMovie.Runtime.split(" ")[0]),
       userRating: rating,
+      countRatingDecisions: countRef.current,
     };
     onSetWatched(addedMovie);
     onCloseMovie();
