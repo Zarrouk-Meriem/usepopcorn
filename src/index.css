@@ -65,9 +65,10 @@ body {
   font-size: 2rem;
   font-weight: 600;
   margin: 4.8rem;
-}
-.loader-icon{
-
+  .loader-icon{
+    height: 5rem;
+    width: 5rem;
+  }
 }
 
 .error {

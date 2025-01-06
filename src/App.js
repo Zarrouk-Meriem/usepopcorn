@@ -51,7 +51,7 @@ const KEY = "f84fc31d";
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 export default function App() {
-  const [query, setQuery] = useState("inception");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,21 +62,27 @@ export default function App() {
 
   useEffect(
     function () {
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setError("");
           setIsLoading(true);
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
           if (!res.ok)
             throw new Error("Something went wrong while fetching movies");
           const data = await res.json();
           if (data.Response === "False") throw new Error("Movie not found");
           setMovies(data.Search);
+          setError("");
         } catch (err) {
-          console.error("caught an error:", err);
-          setError(err.message);
+          if (err.name !== "AbortError") {
+            setError(err.message);
+            console.log(err);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -88,6 +94,9 @@ export default function App() {
       }
 
       fetchMovies();
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
@@ -102,11 +111,11 @@ export default function App() {
   }
   function handleAddWatched(movie) {
     setWatched((watched) => [...watched, movie]);
-    console.log(watched);
   }
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
+
   return (
     <>
       <NavBar>
@@ -154,7 +163,148 @@ function ErrorMessage({ errorMessage }) {
   );
 }
 function Loader() {
-  return <p className="loader">Loading...</p>;
+  return (
+    <div className="loader">
+      <svg
+        className="loader-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+      >
+        <circle cx="12" cy="2" r="0" fill="currentColor">
+          <animate
+            attributeName="r"
+            begin="0"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(45 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.125s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(90 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.25s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(135 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.375s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(180 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.5s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(225 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.625s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(270 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.75s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+        <circle
+          cx="12"
+          cy="2"
+          r="0"
+          fill="currentColor"
+          transform="rotate(315 12 12)"
+        >
+          <animate
+            attributeName="r"
+            begin="0.875s"
+            calcMode="spline"
+            dur="1s"
+            keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+            repeatCount="indefinite"
+            values="0;2;0;0"
+          />
+        </circle>
+      </svg>
+    </div>
+  );
 }
 function NavBar({ children }) {
   return (
@@ -321,9 +471,12 @@ function MovieDetails({
   );
   useEffect(
     function () {
-      console.log(selectedId);
       if (!selectedId) return;
       document.title = `Movie | ${selectedMovie?.Title}`;
+
+      return function () {
+        document.title = "UsePopcorn";
+      };
     },
     [selectedMovie, selectedId]
   );
@@ -339,6 +492,18 @@ function MovieDetails({
     onSetWatched(addedMovie);
     onCloseMovie();
   }
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Escape") onCloseMovie();
+      }
+      document.addEventListener("keydown", callback);
+      return function () {
+        document.addEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
   return (
     <div
       style={{ justifyContent: isLoading ? "center" : "start" }}
