@@ -60,10 +60,6 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [rating, setRating] = useState(0);
 
-  function handleSelection(id) {
-    setSelectedId(id);
-    setCloseMovie(true);
-  }
   useEffect(
     function () {
       async function fetchMovies() {
@@ -95,8 +91,21 @@ export default function App() {
     },
     [query]
   );
+  function handleSelection(id) {
+    setSelectedId(id);
+    setCloseMovie(true);
+    setRating(0);
+  }
   function handleCloseMovie() {
     setCloseMovie(false);
+    setSelectedId(null);
+  }
+  function handleAddWatched(movie) {
+    setWatched((watched) => [...watched, movie]);
+    console.log(watched);
+  }
+  function handleDeleteWatched(id) {
+    setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
   return (
     <>
@@ -121,12 +130,14 @@ export default function App() {
                 rating={rating}
                 selectedId={selectedId}
                 movies={movies}
+                onSetWatched={handleAddWatched}
+                watched={watched}
               />
             )
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <List watched={watched} />
+              <List watched={watched} onDeleteWatched={handleDeleteWatched} />
             </>
           )}
         </Box>
@@ -194,17 +205,7 @@ function Box({ children }) {
   );
 }
 
-// function ToggleBtn({ isOpen2, onSetWatched }) {
-//   return (
-//     <button
-//       className="btn-toggle"
-//       onClick={() => onSetWatched((open) => !open)}
-//     >
-//       {isOpen2 ? "–" : "+"}
-//     </button>
-//   );
-// }
-function List({ watched }) {
+function List({ watched, onDeleteWatched }) {
   return (
     <ul className="list">
       {watched.map((movie) => (
@@ -225,6 +226,12 @@ function List({ watched }) {
               <span>{movie.runtime} min</span>
             </p>
           </div>
+          <button
+            className="btn-delete"
+            onClick={() => onDeleteWatched(movie.imdbID)}
+          >
+            x
+          </button>
         </li>
       ))}
     </ul>
@@ -244,15 +251,15 @@ function WatchedSummary({ watched }) {
         </p>
         <p>
           <span>⭐️</span>
-          <span>{avgImdbRating}</span>
+          <span>{avgImdbRating.toFixed(1)}</span>
         </p>
         <p>
           <span>🌟</span>
-          <span>{avgUserRating}</span>
+          <span>{avgUserRating.toFixed(1)}</span>
         </p>
         <p>
           <span>⏳</span>
-          <span>{avgRuntime} min</span>
+          <span>{avgRuntime.toFixed(0)} min</span>
         </p>
       </div>
     </div>
@@ -261,12 +268,8 @@ function WatchedSummary({ watched }) {
 function MovieList({ movies, handleSelection }) {
   return (
     <ul className="list">
-      {movies?.map((movie) => (
-        <Movie
-          key={movie.imdbID}
-          movie={movie}
-          onSetSelectedId={handleSelection}
-        />
+      {movies?.map((movie, i) => (
+        <Movie key={i} movie={movie} onSetSelectedId={handleSelection} />
       ))}
     </ul>
   );
@@ -285,9 +288,21 @@ function Movie({ movie, onSetSelectedId }) {
     </li>
   );
 }
-function MovieDetails({ selectedId, rating, onSetRating, onCloseMovie }) {
+function MovieDetails({
+  selectedId,
+  rating,
+  onSetRating,
+  onCloseMovie,
+  onSetWatched,
+  watched,
+  movies,
+}) {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const isWatched = watched.map((movie) => movie.imdbID).includes(selectedId);
+  const watchedMovieUserRating = watched.find(
+    (movie) => movie.imdbID === selectedId
+  )?.userRating;
   useEffect(
     function () {
       async function fetchMovieById(id) {
@@ -304,8 +319,31 @@ function MovieDetails({ selectedId, rating, onSetRating, onCloseMovie }) {
     },
     [selectedId]
   );
+  useEffect(
+    function () {
+      console.log(selectedId);
+      if (!selectedId) return;
+      document.title = `Movie | ${selectedMovie?.Title}`;
+    },
+    [selectedMovie, selectedId]
+  );
+  function handleAdd() {
+    const addedMovie = {
+      imdbID: selectedId,
+      imdbRating: Number(selectedMovie.imdbRating),
+      Title: selectedMovie.Title,
+      Poster: selectedMovie.Poster,
+      runtime: Number(selectedMovie.Runtime.split(" ")[0]),
+      userRating: rating,
+    };
+    onSetWatched(addedMovie);
+    onCloseMovie();
+  }
   return (
-    <div className="details">
+    <div
+      style={{ justifyContent: isLoading ? "center" : "start" }}
+      className="details"
+    >
       {isLoading ? (
         <svg
           className="loader-icon"
@@ -504,18 +542,28 @@ function MovieDetails({ selectedId, rating, onSetRating, onCloseMovie }) {
           </header>
           <section>
             <div className="rating">
-              <StarRating
-                key={selectedMovie?.imdbID}
-                maxRating={10}
-                color="#fcc419"
-                size={24}
-                onSetRating={onSetRating}
-                defaultRate={rating}
-              />
-              {rating ? (
-                <button className="btn-add">+ Add to list</button>
+              {isWatched ? (
+                <p>
+                  You rated this movie {watchedMovieUserRating} <span>⭐️</span>
+                </p>
               ) : (
-                <></>
+                <>
+                  <StarRating
+                    key={selectedId}
+                    maxRating={10}
+                    color="#fcc419"
+                    size={24}
+                    onSetRating={onSetRating}
+                    defaultRate={rating}
+                  />
+                  {rating ? (
+                    <button className="btn-add" onClick={() => handleAdd()}>
+                      + Add to list
+                    </button>
+                  ) : (
+                    <></>
+                  )}
+                </>
               )}
             </div>
             <p style={{ marginBottom: "1rem", fontStyle: "italic" }}>
