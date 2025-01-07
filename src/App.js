@@ -1,63 +1,21 @@
 import { useEffect, useRef, useState } from "react";
+import { useMovies } from "./useMovies";
 import StarRating from "./StarRating";
+import { useLocalStorageState } from "./useLocalStorageState";
+import { useKey } from "./useKey";
 
 const KEY = "f84fc31d";
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 export default function App() {
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
-  // const [watched, setWatched] = useState([]);
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watched");
-    return JSON.parse(storedValue);
-  });
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [watched, setWatched] = useLocalStorageState([], "watched");
+
   const [closedMovie, setCloseMovie] = useState(true);
-  const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
   const [rating, setRating] = useState(0);
 
-  useEffect(
-    function () {
-      const controller = new AbortController();
-
-      async function fetchMovies() {
-        try {
-          setError("");
-          setIsLoading(true);
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
-            { signal: controller.signal }
-          );
-          if (!res.ok)
-            throw new Error("Something went wrong while fetching movies");
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-          setMovies(data.Search);
-          setError("");
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            setError(err.message);
-            console.log(err);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-
-      fetchMovies();
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
-  );
   function handleSelection(id) {
     setSelectedId(id);
     setCloseMovie(true);
@@ -73,12 +31,8 @@ export default function App() {
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
-  useEffect(
-    function () {
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
-  );
+  const { movies, isLoading, error } = useMovies(query, handleCloseMovie);
+
   return (
     <>
       <NavBar>
@@ -294,21 +248,13 @@ function Logo() {
 }
 function Search({ query, setQuery }) {
   const inputEl = useRef(null);
-  useEffect(
-    function () {
-      function callback(e) {
-        if (inputEl.current === document.activeElement) return;
-        if (e.code === "Enter") {
-          inputEl.current.focus();
-          setQuery("");
-        }
-      }
-      document.addEventListener("keydown", callback);
 
-      inputEl.current.focus();
-    },
-    [setQuery]
-  );
+  useKey("Enter", function () {
+    if (inputEl.current === document.activeElement) return;
+    inputEl.current.focus();
+    setQuery("");
+  });
+
   return (
     <input
       className="search"
@@ -479,18 +425,19 @@ function MovieDetails({
     onSetWatched(addedMovie);
     onCloseMovie();
   }
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Escape") onCloseMovie();
-      }
-      document.addEventListener("keydown", callback);
-      return function () {
-        document.addEventListener("keydown", callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  useKey("Escape", onCloseMovie);
+  // useEffect(
+  //   function () {
+  //     function callback(e) {
+  //       if (e.code === "Escape") onCloseMovie();
+  //     }
+  //     document.addEventListener("keydown", callback);
+  //     return function () {
+  //       document.addEventListener("keydown", callback);
+  //     };
+  //   },
+  //   [onCloseMovie]
+  // );
   return (
     <div
       style={{ justifyContent: isLoading ? "center" : "start" }}
